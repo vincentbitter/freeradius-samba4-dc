@@ -16,7 +16,7 @@ RUN apt -y install winbind
 RUN apt -y install krb5-user
 
 # Install freeradius 3.0.X
-RUN apt install freeradius freeradius-config 
+RUN apt -y install freeradius freeradius-config 
 
 # Copy files
 COPY init /
