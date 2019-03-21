@@ -20,3 +20,5 @@ RUN apt -y install freeradius freeradius-config
 
 # Copy files
 COPY init /
+
+RUN ["chmod", "+x", "/init"]
