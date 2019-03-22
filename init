@@ -43,9 +43,9 @@ service winbind start
 cp ${SERVER_KEY_FILE} ${SERVER_KEY_FILE_DEST}
 cp ${SERVER_CERT_FILE} ${SERVER_CERT_FILE_DEST}
 cp ${SERVER_CA_FILE} ${SERVER_CA_FILE_DEST}
-chown freerad ${SERVER_KEY_FILE_DEST}
-chown freerad ${SERVER_CERT_FILE_DEST}
-chown freerad ${SERVER_CA_FILE_DEST}
+chown freerad:freerad ${SERVER_KEY_FILE_DEST}
+chown freerad:freerad ${SERVER_CERT_FILE_DEST}
+chown freerad:freerad ${SERVER_CA_FILE_DEST}
 chmod +r ${SERVER_KEY_FILE_DEST}
 chmod +r ${SERVER_CERT_FILE_DEST}
 chmod +r ${SERVER_CA_FILE_DEST}
@@ -53,7 +53,7 @@ chmod +r ${SERVER_CA_FILE_DEST}
 sed -i -e "s/private_key_password = whatever/private_key_password = /" /etc/freeradius/3.0/mods-enabled/eap
 sed -i 's@private_key_file = \/etc\/ssl\/private/ssl-cert-snakeoil.key@private_key_file = '"${SERVER_KEY_FILE_DEST}"'@' /etc/freeradius/3.0/mods-enabled/eap
 sed -i 's@certificate_file = \/etc\/ssl\/certs\/ssl-cert-snakeoil.pem@certificate_file = '"${SERVER_CERT_FILE_DEST}"'@' /etc/freeradius/3.0/mods-enabled/eap
-sed -i 's@ca_file = \/etc\/ssl\/private/ca-certificates.crt@ca_file = '"${SERVER_CA_FILE_DEST}"'@' /etc/freeradius/3.0/mods-enabled/eap
+sed -i 's@ca_file = \/etc\/ssl\/certs/ca-certificates.crt@ca_file = '"${SERVER_CA_FILE_DEST}"'@' /etc/freeradius/3.0/mods-enabled/eap
 
 # Grant permission for freerad user on winbind's socket
 usermod -a -G winbindd_priv freerad
@@ -62,7 +62,7 @@ usermod -a -G winbindd_priv freerad
 echo "#  Depending on the AD / Samba configuration, you may also need to add: --allow-mschapv2" > /etc/freeradius/3.0/mods-enabled/ntlm_auth
 echo "exec ntlm_auth {" >> /etc/freeradius/3.0/mods-enabled/ntlm_auth
 echo "        wait = yes" >> /etc/freeradius/3.0/mods-enabled/ntlm_auth
-echo "        program = "/usr/bin/ntlm_auth --request-nt-key --domain=${WORKGROUP} --username=%{mschap:User-Name} --password=%{User-Password}"" >> /etc/freeradius/3.0/mods-enabled/ntlm_auth
+echo "        program = \"/usr/bin/ntlm_auth --request-nt-key --domain=${WORKGROUP} --username=%{mschap:User-Name} --password=%{User-Password}\"" >> /etc/freeradius/3.0/mods-enabled/ntlm_auth
 echo "}" >> /etc/freeradius/3.0/mods-enabled/ntlm_auth
 
 sed -i -e "s/mschap {/mschap {\n\
