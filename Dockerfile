@@ -23,3 +23,4 @@ COPY init /
 
 RUN ["chmod", "+x", "/init"]
 
+CMD [ "freeradius", "-X", "-f" ]
