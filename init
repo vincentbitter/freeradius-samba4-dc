@@ -1,9 +1,6 @@
 #!/bin/bash
 # vim: set ts=4 sts=4 sw=4 et:
 
-WORKGROUP="${WORKGROUP:-EXAMPLE}"
-DOMAIN="${DOMAIN:-EXAMPLE.COM}"
-DOMAINCONTROLLER="${DOMAINCONTROLLER:-dc01.example.com}"
 DOMAIN_ADMIN="${DOMAIN_ADMIN:-Administrator}"
 DOMAIN_PASSWORD="${DOMAIN_PASSWORD:-P@ssw0rd}"
 SERVER_KEY_FILE="${SERVER_KEY_FILE:-/etc/ssl/private/ssl-cert-snakeoil.key}"
@@ -13,24 +10,10 @@ SERVER_KEY_FILE_DEST="/etc/freeradius/3.0/certs/server.key"
 SERVER_CERT_FILE_DEST="/etc/freeradius/3.0/certs/server.crt"
 SERVER_CA_FILE_DEST="/etc/freeradius/3.0/certs/ca.crt"
 
-# Edit /etc/samba/smb.conf
-sed -i -e "s/workgroup = WORKGROUP/workgroup = ${WORKGROUP}\n\
-   security = ads\n\
-   password server = ${DOMAINCONTROLLER}\n\
-   realm = ${DOMAIN}\n\
-   winbind use default domain = true/" /etc/samba/smb.conf
-
-# Edit /etc/krb5.conf
-sed -i -e "s/default_realm = ATHENA.MIT.EDU/default_realm = ${DOMAIN}/" /etc/krb5.conf
-sed -i -e "s/\[realms\]/\[realms\]\n\
-        ${DOMAIN} {\n\
-                kdc = ${DOMAINCONTROLLER}\n\
-                admin_server = ${DOMAINCONTROLLER}\n\
-                default_domain = ${DOMAIN}\n\
-        }/" /etc/krb5.conf
-sed -i -e "s/\[domain_realm\]/\[domain_realm\]\n\
-        .${DOMAIN} = ${DOMAIN}\n\
-        ${DOMAIN} = ${DOMAIN}/" /etc/krb5.conf
+if [ ! -f /configure ]; then
+    /configure
+    rm /configure
+fi
 
 # Join domain
 net join -U ${DOMAIN_ADMIN}%${DOMAIN_PASSWORD} 
@@ -50,28 +33,6 @@ chmod +r ${SERVER_KEY_FILE_DEST}
 chmod +r ${SERVER_CERT_FILE_DEST}
 chmod +r ${SERVER_CA_FILE_DEST}
 
-sed -i -e "s/private_key_password = whatever/private_key_password = /" /etc/freeradius/3.0/mods-enabled/eap
-sed -i 's@private_key_file = \/etc\/ssl\/private/ssl-cert-snakeoil.key@private_key_file = '"${SERVER_KEY_FILE_DEST}"'@' /etc/freeradius/3.0/mods-enabled/eap
-sed -i 's@certificate_file = \/etc\/ssl\/certs\/ssl-cert-snakeoil.pem@certificate_file = '"${SERVER_CERT_FILE_DEST}"'@' /etc/freeradius/3.0/mods-enabled/eap
-sed -i 's@ca_file = \/etc\/ssl\/certs/ca-certificates.crt@ca_file = '"${SERVER_CA_FILE_DEST}"'@' /etc/freeradius/3.0/mods-enabled/eap
-
-# Grant permission for freerad user on winbind's socket
-usermod -a -G winbindd_priv freerad
-
-# Tell FreeRADIUS to use ntlm_auth for MSCHAP by editing
-echo "#  Depending on the AD / Samba configuration, you may also need to add: --allow-mschapv2" > /etc/freeradius/3.0/mods-enabled/ntlm_auth
-echo "exec ntlm_auth {" >> /etc/freeradius/3.0/mods-enabled/ntlm_auth
-echo "        wait = yes" >> /etc/freeradius/3.0/mods-enabled/ntlm_auth
-echo "        program = \"/usr/bin/ntlm_auth --request-nt-key --domain=${WORKGROUP} --username=%{mschap:User-Name} --password=%{User-Password}\"" >> /etc/freeradius/3.0/mods-enabled/ntlm_auth
-echo "}" >> /etc/freeradius/3.0/mods-enabled/ntlm_auth
-
-sed -i -e "s/mschap {/mschap {\n\
-        ntlm_auth = \"\/usr\/bin\/ntlm_auth --request-nt-key --domain=${WORKGROUP} --username=%{%{Stripped-User-Name}:-%{%{User-Name}:-None}} --challenge=%{%{mschap:Challenge}:-00} --nt-response=%{%{mschap:NT-Response}:-00}\" /" /etc/freeradius/3.0/mods-enabled/mschap
-
-sed -i -e "s/authenticate {/authenticate {\n\
-        ntlm_auth/" /etc/freeradius/3.0/sites-enabled/default
-
-sed -i -e "s/authenticate {/authenticate {\n\
-        ntlm_auth/" /etc/freeradius/3.0/sites-enabled/inner-tunnel
+# Configure RADIUS client, /etc/freeradius/clients.conf
 
 exec "$@"
