@@ -73,3 +73,5 @@ sed -i -e "s/authenticate {/authenticate {\n\
 
 sed -i -e "s/authenticate {/authenticate {\n\
         ntlm_auth/" /etc/freeradius/3.0/sites-enabled/inner-tunnel
+
+freeradius -X -f

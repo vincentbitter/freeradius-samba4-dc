@@ -23,4 +23,3 @@ COPY init /
 
 RUN ["chmod", "+x", "/init"]
 
-CMD ["radiusd"]
