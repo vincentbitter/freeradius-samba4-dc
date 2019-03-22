@@ -22,3 +22,5 @@ RUN apt -y install freeradius freeradius-config
 COPY init /
 
 RUN ["chmod", "+x", "/init"]
+
+CMD ["radiusd"]
