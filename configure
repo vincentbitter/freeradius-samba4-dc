@@ -34,6 +34,10 @@ sed -i 's@private_key_file = \/etc\/ssl\/private/ssl-cert-snakeoil.key@private_k
 sed -i 's@certificate_file = \/etc\/ssl\/certs\/ssl-cert-snakeoil.pem@certificate_file = '"${SERVER_CERT_FILE_DEST}"'@' /etc/freeradius/3.0/mods-enabled/eap
 sed -i 's@ca_file = \/etc\/ssl\/certs/ca-certificates.crt@ca_file = '"${SERVER_CA_FILE_DEST}"'@' /etc/freeradius/3.0/mods-enabled/eap
 
+# Grant permission for freerad user on winbind's socket
+usermod -a -G winbindd_priv freerad
+chgrp winbindd_priv /var/lib/samba/winbindd_privileged/
+
 # Tell FreeRADIUS to use ntlm_auth for MSCHAP by editing
 echo "#  Depending on the AD / Samba configuration, you may also need to add: --allow-mschapv2" > /etc/freeradius/3.0/mods-enabled/ntlm_auth
 echo "exec ntlm_auth {" >> /etc/freeradius/3.0/mods-enabled/ntlm_auth
