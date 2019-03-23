@@ -10,7 +10,7 @@ SERVER_KEY_FILE_DEST="/etc/freeradius/3.0/certs/server.key"
 SERVER_CERT_FILE_DEST="/etc/freeradius/3.0/certs/server.crt"
 SERVER_CA_FILE_DEST="/etc/freeradius/3.0/certs/ca.crt"
 
-if [ ! -f /configure ]; then
+if [ -f /configure ]; then
     /configure
     rm /configure
 fi
