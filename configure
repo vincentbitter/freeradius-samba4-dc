@@ -3,6 +3,7 @@
 
 WORKGROUP="${WORKGROUP:-EXAMPLE}"
 DOMAIN="${DOMAIN:-EXAMPLE.COM}"
+LOWERCASE_DOMAIN="$(echo ${DOMAIN} | tr '[:upper:]' '[:lower:]')"
 DOMAINCONTROLLER="${DOMAINCONTROLLER:-dc01.example.com}"
 SERVER_KEY_FILE_DEST="/etc/freeradius/3.0/certs/server.key"
 SERVER_CERT_FILE_DEST="/etc/freeradius/3.0/certs/server.crt"
@@ -21,12 +22,12 @@ sed -i -e "s/default_realm = ATHENA.MIT.EDU/default_realm = ${DOMAIN}/" /etc/krb
 sed -i -e "s/ATHENA.MIT.EDU = {/${DOMAIN} {\n\
                 kdc = ${DOMAINCONTROLLER}\n\
                 admin_server = ${DOMAINCONTROLLER}\n\
-                default_domain = ${DOMAIN}\n\
+                default_domain = ${LOWERCASE_DOMAIN}\n\
         }\n\
         ATHENA.MIT.EDU = {/" /etc/krb5.conf
 sed -i -e "s/\[domain_realm\]/\[domain_realm\]\n\
-        .${DOMAIN} = ${DOMAIN}\n\
-        ${DOMAIN} = ${DOMAIN}/" /etc/krb5.conf
+        .${LOWERCASE_DOMAIN} = ${DOMAIN}\n\
+        ${LOWERCASE_DOMAIN} = ${DOMAIN}/" /etc/krb5.conf
 
 sed -i -e "s/private_key_password = whatever/private_key_password = /" /etc/freeradius/3.0/mods-enabled/eap
 sed -i 's@private_key_file = \/etc\/ssl\/private/ssl-cert-snakeoil.key@private_key_file = '"${SERVER_KEY_FILE_DEST}"'@' /etc/freeradius/3.0/mods-enabled/eap
