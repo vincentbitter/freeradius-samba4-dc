@@ -18,13 +18,12 @@ sed -i -e "s/workgroup = WORKGROUP/workgroup = ${WORKGROUP}\n\
 
 # Edit /etc/krb5.conf
 sed -i -e "s/default_realm = ATHENA.MIT.EDU/default_realm = ${DOMAIN}/" /etc/krb5.conf
-sed -i -e "s/ATHENA.MIT.EDU = {/\
-        ${DOMAIN} {\n\
+sed -i -e "s/ATHENA.MIT.EDU = {/${DOMAIN} {\n\
                 kdc = ${DOMAINCONTROLLER}\n\
                 admin_server = ${DOMAINCONTROLLER}\n\
                 default_domain = ${DOMAIN}\n\
         }\n\
-                ATHENA.MIT.EDU = {/" /etc/krb5.conf
+        ATHENA.MIT.EDU = {/" /etc/krb5.conf
 sed -i -e "s/\[domain_realm\]/\[domain_realm\]\n\
         .${DOMAIN} = ${DOMAIN}\n\
         ${DOMAIN} = ${DOMAIN}/" /etc/krb5.conf
