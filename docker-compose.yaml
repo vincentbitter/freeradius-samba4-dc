@@ -1,0 +1,39 @@
+version: '3.9'
+
+# добавление ротации логов с использование базового механизма json
+x-log: &logging
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"   # максимальный размер одного файла
+      max-file: "10"    # максимальное колличество файлов
+
+services:
+  freeradius:
+    build:
+      context: ./.docker
+      dockerfile: Dockerfile
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 50M
+        reservations:
+          memory: 10M 
+    <<: *logging
+    restart: ${RESTART_POLICY:-unless-stopped}
+    security_opt:
+      - no-new-privileges:true
+    hostname: ${HOSTNAME}
+    volumes:
+      - ${SERVER_KEY}:/etc/freeradius/3.0/certs/server.key:ro
+      - ${SERVER_CRT}:/etc/freeradius/3.0/certs/server.crt:ro
+      - ./conf/eap:/etc/freeradius/3.0/mods-enabled/eap  
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    env_file:
+      - .env
+    ports:
+      - ${PORT_AUTH}:1812/udp
+      - ${PORT_ACC}:1813/udp      
+      - ${PORT_MONITORING}:18121/udp

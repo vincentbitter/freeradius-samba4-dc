@@ -1,0 +1,59 @@
+eap {                                                                                                                                                                                                             
+	default_eap_type = md5
+	timer_expire = 60
+	ignore_unknown_eap_types = no
+	cisco_accounting_username_bug = no
+	max_sessions = ${max_requests}
+	md5 {
+	}
+    tls-config tls-common {
+		private_key_password = 
+		private_key_file = /etc/freeradius/3.0/certs/server.key
+		certificate_file = /etc/freeradius/3.0/certs/server.crt
+	#	auto_chain = yes
+	#	psk_identity = "test"
+	#	psk_hexphrase = "036363823"
+	#	psk_query = "%{sql:select hex(key) from psk_keys where keyid = '%{TLS-PSK-Identity}'}"
+		dh_file = ${certdir}/dh
+	#	random_file = /dev/urandom
+	#	fragment_size = 1024
+	#	include_length = yes
+	#	check_crl = yes
+	#	check_all_crl = yes
+		ca_path = ${cadir}
+	#	allow_expired_crl = no
+	#	check_cert_issuer = "/C=GB/ST=Berkshire/L=Newbury/O=My Company Ltd"
+	#	check_cert_cn = %{User-Name}
+		cipher_list = "DEFAULT"
+		cipher_server_preference = no
+	#	disable_tlsv1_2 = no
+		disable_tlsv1_1 = yes
+		disable_tlsv1 = yes
+		tls_min_version = "1.2"
+		tls_max_version = "1.2"
+		ecdh_curve = "prime256v1"
+    }                                                                                                                                                                                                                                                                                                                                                                                                                
+    ttls {
+		tls = tls-common
+		default_eap_type = md5
+		copy_request_to_tunnel = no
+		use_tunneled_reply = no
+		virtual_server = "inner-tunnel"
+	}
+peap {
+		tls = tls-common
+		default_eap_type = mschapv2
+		copy_request_to_tunnel = no
+		use_tunneled_reply = no
+	#	proxy_tunneled_request_as_eap = yes
+		virtual_server = "inner-tunnel"
+	#	soh = yes
+	#	soh_virtual_server = "soh-server"
+	#	require_client_cert = yes
+	}
+mschapv2 {
+	#	send_error = no
+	#	identity = "FreeRADIUS"
+	}
+
+}
