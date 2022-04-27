@@ -48,7 +48,7 @@ Before deploying the project, install Docker, Docker Compose latest versions.
 
 ---
 
-Для установки выполните:
+For installation:
 To install, run:
 
 1. Do a git clone.
