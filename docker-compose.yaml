@@ -1,12 +1,12 @@
 version: '3.9'
 
-# добавление ротации логов с использование базового механизма json
+# Adding log rotation using the basic json mechanism
 x-log: &logging
   logging:
     driver: "json-file"
     options:
-      max-size: "10m"   # максимальный размер одного файла
-      max-file: "10"    # максимальное колличество файлов
+      max-size: "10m"   # max size of one file
+      max-file: "10"    # max number of files
 
 services:
   freeradius:
