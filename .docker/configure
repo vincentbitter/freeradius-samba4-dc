@@ -1,21 +1,32 @@
 #!/bin/bash
 # vim: set ts=4 sts=4 sw=4 et:
 
-WORKGROUP="${WORKGROUP:-EXAMPLE}"
-DOMAIN="${DOMAIN:-EXAMPLE.COM}"
+WORKGROUP="${WORKGROUP}"
+DOMAIN="${DOMAIN}"
+GROUPAD="${GROUPAD}"
 LOWERCASE_DOMAIN="$(echo ${DOMAIN} | tr '[:upper:]' '[:lower:]')"
-DOMAINCONTROLLER="${DOMAINCONTROLLER:-dc01.example.com}"
-SERVER_KEY_FILE_DEST="/etc/freeradius/3.0/certs/server.key"
-SERVER_CERT_FILE_DEST="/etc/freeradius/3.0/certs/server.crt"
-SERVER_CA_FILE_DEST="/etc/freeradius/3.0/certs/ca.crt"
-RADIUS_CLIENT_CREDENTIALS="${RADIUS_CLIENT_CREDENTIALS:-}"
+DOMAINCONTROLLER="${DOMAINCONTROLLER}"
+SERVER_KEY_FILE_DEST="${SERVER_KEY_FILE_DEST}"
+SERVER_CERT_FILE_DEST="${SERVER_CERT_FILE_DEST}"
+SERVER_CA_FILE_DEST="${SERVER_CA_FILE_DEST}"
 
-# Edit /etc/samba/smb.conf
-sed -i -e "s/workgroup = WORKGROUP/workgroup = ${WORKGROUP}\n\
-   security = ads\n\
-   password server = ${DOMAINCONTROLLER}\n\
-   realm = ${DOMAIN}\n\
-   winbind use default domain = true/" /etc/samba/smb.conf
+# Radius Client
+
+CLIENT_RADIUS="${CLIENT_RADIUS}"
+SECRET_RADIUS="${SECRET_RADIUS}"
+IP_CLIENT_RADIUS="${IP_CLIENT_RADIUS}"
+
+# Radius Client
+SECRET_CLIENT_MONITOR="${SECRET_CLIENT_MONITOR}"
+
+ # Edit /etc/samba/smb.conf
+ sed -i -e "s/workgroup = WORKGROUP/workgroup = ${WORKGROUP}\n\
+    security = ads\n\
+    password server = ${DOMAINCONTROLLER}\n\
+    realm = ${DOMAIN}\n\
+    winbind use default domain = true/" /etc/samba/smb.conf
+
+
 
 # Edit /etc/krb5.conf
 sed -i -e "s/default_realm = ATHENA.MIT.EDU/default_realm = ${DOMAIN}/" /etc/krb5.conf
@@ -28,11 +39,6 @@ sed -i -e "s/ATHENA.MIT.EDU = {/${DOMAIN} {\n\
 sed -i -e "s/\[domain_realm\]/\[domain_realm\]\n\
         .${LOWERCASE_DOMAIN} = ${DOMAIN}\n\
         ${LOWERCASE_DOMAIN} = ${DOMAIN}/" /etc/krb5.conf
-
-sed -i -e "s/private_key_password = whatever/private_key_password = /" /etc/freeradius/3.0/mods-enabled/eap
-sed -i 's@private_key_file = \/etc\/ssl\/private/ssl-cert-snakeoil.key@private_key_file = '"${SERVER_KEY_FILE_DEST}"'@' /etc/freeradius/3.0/mods-enabled/eap
-sed -i 's@certificate_file = \/etc\/ssl\/certs\/ssl-cert-snakeoil.pem@certificate_file = '"${SERVER_CERT_FILE_DEST}"'@' /etc/freeradius/3.0/mods-enabled/eap
-sed -i 's@ca_file = \/etc\/ssl\/certs/ca-certificates.crt@ca_file = '"${SERVER_CA_FILE_DEST}"'@' /etc/freeradius/3.0/mods-enabled/eap
 
 # Grant permission for freerad user on winbind's socket
 usermod -a -G winbindd_priv freerad
@@ -55,16 +61,38 @@ sed -i -e "s/authenticate {/authenticate {\n\
         ntlm_auth/" /etc/freeradius/3.0/sites-enabled/inner-tunnel
 
 # Configure RADIUS client
-IFS=$',' read -ra RADIUS_CLIENT_CREDENTIALS_ARRAY <<< "$RADIUS_CLIENT_CREDENTIALS"
-for i in "${RADIUS_CLIENT_CREDENTIALS_ARRAY[@]}"; do
-    CLIENT="${i%%:*}"
-    SECRET="${i#*:}"
-    cat >> /etc/freeradius/3.0/clients.conf << EOF
-client $CLIENT {
-    secret = $SECRET
-    shortname = $CLIENT
-    ipaddr = $CLIENT
+cat > /etc/freeradius/3.0/clients.conf << EOF
+client $CLIENT_RADIUS {
+    secret = $SECRET_RADIUS
+    shortname = $CLIENT_RADIUS
+    ipaddr = $IP_CLIENT_RADIUS
     nas_type = other
 }
 EOF
-done
+
+cat > /etc/freeradius/3.0/sites-enabled/status.conf << EOF
+server status {
+	listen {
+		#  ONLY Status-Server is allowed to this port.
+		#  ALL other packets are ignored.
+		type = status
+
+		ipaddr = *
+		port = 18121
+	}
+	client monitor {
+                ipaddr = *
+                proto = *
+		secret = $SECRET_CLIENT_MONITOR
+	}
+	authorize {
+		ok
+
+		# respond to the Status-Server request.
+		Autz-Type Status-Server {
+			ok
+		}
+	}
+}
+
+EOF
