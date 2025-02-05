@@ -1,5 +1,5 @@
-FROM ubuntu:20.04
-LABEL maintainer="Vincent Bitter, Shatov Ilya"
+FROM ubuntu:22.04
+LABEL maintainer="Vincent Bitter, Shatov Ilya, S1ephen"
 
 # Set environment variables to avoid interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
